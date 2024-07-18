@@ -7,6 +7,7 @@ app.use(cors());
 
 app.get('/', async (req, res) => {
     console.log(await qr.create("HAI"));
+    console.log(await qr.toDataURL("HAI"));
     return res.send("hello world");
 });
 
