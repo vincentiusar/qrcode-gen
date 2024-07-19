@@ -52,7 +52,7 @@ app.get('/gen', async (req, res) => {
         where: { key: data },
         defaults: {
             key: data,
-            value: form,
+            value: baseUrl+encodeURI(data),
             createdAt: Date.now(),
             updatedAt: Date.now()
         }
@@ -76,6 +76,7 @@ app.get('/tap', loginCheck, async (req, res) => {
 
         if (data) {
             try {
+                console.log(data);
                 return res.redirect(data.value);
             } catch (e) {
                 return res.redirect(baseUrl+key);
