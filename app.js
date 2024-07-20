@@ -48,6 +48,7 @@ app.get('/gen', async (req, res) => {
     }
     const form = `${encodedUrl}${encodeURI(data)}`;
     const result1 = await qr.toDataURL(form);
+
     await urls.findOrCreate({
         where: { key: data },
         defaults: {
@@ -58,7 +59,13 @@ app.get('/gen', async (req, res) => {
         }
     });
 
-    return res.send(`<img src="${result1}" alt="test"/>`);
+    const d = result1.replace(/^data:image\/png;base64,/, '');
+    const img = Buffer.from(d, 'base64');
+    res.writeHead(200, {
+        'Content-Type': 'image/jpeg',
+        'Content-Length': img.length
+    });
+    return res.end(img);
 });
 
 app.get('/', async (req, res) => {
