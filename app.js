@@ -25,35 +25,38 @@ app.use(cors());
 const { users } = require('./models');
 const { urls } = require('./models');
 // https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/viewform?usp=pp_url&entry.1579164508=b
-const encodedUrl = "https://rajawalichurch.my.id/tap?key=";
-const baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/formResponse?usp=pp_url&entry.1579164508=";
+const encodedUrl = "https://rajawalichurch.my.id/tap";
+// const baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/viewform?usp=pp_url&entry.1579164508=dummy+data&entry.41140801=19b6617eade45bae3959cf6ddf49bbc8&entry.615117972=vincentiusdata2@gmail.com";
 
 const loginCheck = async (req, res, next) => {
     if (!req.session.token) {
         return res.send("Unauthenticated");
     }
-    
+
     try {
         await jwt.verify(req.session.token, process.env.SESSION_SECRET);
         return next();
     } catch (e) {
+        req.session.destroy();
         console.log(e);
     }
 }
 
 app.get('/gen', async (req, res) => {
-    const data = req.query?.name;
-    if (!data) {
+    const data = req.query;
+    if (!data.name || !data.ref || !data.email) {
         return res.send("DATA NOT VALID");
     }
-    const form = `${encodedUrl}${encodeURI(data)}`;
+    const form = `${encodedUrl}?key=${encodeURI(data.name)}&email=${data.email}&ref=${data.ref}`;
     const result1 = await qr.toDataURL(form);
 
+    const url = `https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/formResponse?usp=pp_url&entry.1579164508=${data.name}&entry.41140801=${data.ref}&entry.615117972=${data.email}`;
+
     await urls.findOrCreate({
-        where: { key: data },
+        where: { key: data.name },
         defaults: {
-            key: data,
-            value: baseUrl+encodeURI(data),
+            key: data.name,
+            value: url,
             createdAt: Date.now(),
             updatedAt: Date.now()
         }
@@ -77,17 +80,17 @@ app.get('/', async (req, res) => {
 
 app.get('/tap', loginCheck, async (req, res) => {
     if (req.query?.key) {
+        const backup = req.query;
         const data = await urls.findOne({
             where: { key: req.query.key }
         });
-
         if (data) {
             try {
-                console.log(data);
                 return res.redirect(data.value);
-            } catch (e) {
-                return res.redirect(baseUrl+key);
-            }
+            } catch (e) { console.log(e); }
+        } else {
+            const url = `https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/formResponse?usp=pp_url&entry.1579164508=${encodeURI(data.name)}&entry.41140801=${backup.ref}&entry.615117972=${backup.email}`;
+            return res.redirect(url);
         }
     }
 
