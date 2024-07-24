@@ -22,10 +22,9 @@ app.use(session({
 }))
 app.use(cors());
 
-const { users } = require('./models');
-const { urls } = require('./models');
+const { users, urls, taps } = require('./models');
 // https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/viewform?usp=pp_url&entry.1579164508=b
-const encodedUrl = "https://rajawalichurch.my.id/tap";
+const encodedUrl = "http://localhost:3000/tap";
 // const baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/viewform?usp=pp_url&entry.1579164508=dummy+data&entry.41140801=19b6617eade45bae3959cf6ddf49bbc8&entry.615117972=vincentiusdata2@gmail.com";
 
 const loginCheck = async (req, res, next) => {
@@ -49,7 +48,6 @@ app.get('/gen', async (req, res) => {
     }
     const form = `${encodedUrl}?key=${encodeURI(data.name)}&email=${data.email}&ref=${data.ref}`;
     const result1 = await qr.toDataURL(form);
-
     const url = `https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/formResponse?usp=pp_url&entry.1579164508=${data.name}&entry.41140801=${data.ref}&entry.615117972=${data.email}`;
 
     await urls.findOrCreate({
@@ -80,18 +78,29 @@ app.get('/', async (req, res) => {
 
 app.get('/tap', loginCheck, async (req, res) => {
     if (req.query?.key) {
+        const checkedIn = await taps.findOne(
+            {where: {name: req.query.key}}
+        );
+
+        if (checkedIn) return res.send(`<p>ALREADY CHECK IN!!</p><br/><p>${checkedIn.createdAt}</p>`);
+
         const backup = req.query;
         const data = await urls.findOne({
             where: { key: req.query.key }
         });
+        await taps.create({name: req.query.key });
         if (data) {
             try {
                 return res.redirect(data.value);
-            } catch (e) { console.log(e); }
+            } catch (e) {
+                const url = `https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/formResponse?usp=pp_url&entry.1579164508=${encodeURI(data.name)}&entry.41140801=${backup.ref}&entry.615117972=${backup.email}`;
+                return res.redirect(url);
+            }
         } else {
             const url = `https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/formResponse?usp=pp_url&entry.1579164508=${encodeURI(data.name)}&entry.41140801=${backup.ref}&entry.615117972=${backup.email}`;
             return res.redirect(url);
         }
+
     }
 
     return res.send("Unauthenticated");
@@ -103,12 +112,15 @@ app.get('/login', async (req, res) => {
 
 app.post('/login', async (req, res) => {
     if (req.body && req?.body?.username) {
-        const user = await users.findOne({ where: {username: req.body.username }});
-        if (user?.username == req.body.username && bcrypt.compare(user?.password, req.body.password)) {
-            const token = jwt.sign(req.body, process.env.SESSION_SECRET, { expiresIn: '1d' });
-
-            let session = req.session;
-            session.token = token;
+        const user = await users.findOne({ where: { username: req.body.username }});
+        if (user) {
+            const passMatch = await bcrypt.compare(req.body.password, user.password);
+            if (user?.username == req.body.username && passMatch) {
+                const token = jwt.sign(req.body, process.env.SESSION_SECRET, { expiresIn: '1d' });
+    
+                let session = req.session;
+                session.token = token;
+            }
         }
     }
     return res.redirect('/');
