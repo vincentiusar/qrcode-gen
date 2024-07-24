@@ -118,15 +118,8 @@ app.get('/tap', loginCheck, async (req, res) => {
         if (data) {
             try {
                 return res.redirect(data.value);
-            } catch (e) {
-                const url = `https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/formResponse?usp=pp_url&entry.1579164508=${encodeURI(data.name)}&entry.41140801=${backup.ref}&entry.615117972=${backup.email}`;
-                return res.redirect(url);
-            }
-        } else {
-            const url = `https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/formResponse?usp=pp_url&entry.1579164508=${encodeURI(data.name)}&entry.41140801=${backup.ref}&entry.615117972=${backup.email}`;
-            return res.redirect(url);
+            } catch (e) { console.log(e); }
         }
-
     }
 
     return res.send("Unauthenticated");
