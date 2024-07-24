@@ -24,7 +24,7 @@ app.use(cors());
 
 const { users, urls, taps } = require('./models');
 // https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/viewform?usp=pp_url&entry.1579164508=b
-const encodedUrl = "http://localhost:3000/tap";
+const encodedUrl = "http://rajawalichurch.my.id/tap";
 // const baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/viewform?usp=pp_url&entry.1579164508=dummy+data&entry.41140801=19b6617eade45bae3959cf6ddf49bbc8&entry.615117972=vincentiusdata2@gmail.com";
 
 const loginCheck = async (req, res, next) => {
@@ -71,7 +71,20 @@ app.get('/gen', async (req, res) => {
 
 app.get('/', async (req, res) => {
     if (req.session.token) {
-        return res.send('Welcome :D');
+        return res.send(`
+            <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Login</title>
+                    <script src="https://cdn.tailwindcss.com"></script>
+                </head>
+                <body>
+                    <div class='bg-slate-700 w-screen h-screen text-white text-3xl flex items-center justify-center'>Welcome :D</div>
+                </body>
+            </html>
+        `);
     }
     return res.send('welcome?');
 });
@@ -82,7 +95,20 @@ app.get('/tap', loginCheck, async (req, res) => {
             {where: {name: req.query.key}}
         );
 
-        if (checkedIn) return res.send(`<p>ALREADY CHECK IN!!</p><br/><p>${checkedIn.createdAt}</p>`);
+        if (checkedIn) return res.send(`
+            <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Login</title>
+                    <script src="https://cdn.tailwindcss.com"></script>
+                </head>
+                <body>
+                    <p>ALREADY CHECK IN!!</p><br/><p>${checkedIn.createdAt}</p>
+                </body>
+            </html>
+        `);
 
         const backup = req.query;
         const data = await urls.findOne({
