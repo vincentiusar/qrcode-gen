@@ -25,7 +25,7 @@ app.use(cors());
 
 const { users, urls, taps } = require('./models');
 // https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/viewform?usp=pp_url&entry.1579164508=b
-const encodedUrl = "http://localhost:3000/tap";
+const encodedUrl = "http://rajawalichurch.my.id/tap";
 // const baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/viewform?usp=pp_url&entry.1579164508=dummy+data&entry.41140801=19b6617eade45bae3959cf6ddf49bbc8&entry.615117972=vincentiusdata2@gmail.com";
 
 const loginCheck = async (req, res, next) => {
@@ -124,7 +124,13 @@ app.get('/tap', loginCheck, async (req, res) => {
         if (data) {
             try {
                 return res.redirect(data.value);
-            } catch (e) { console.log(e); }
+            } catch (e) {
+                const url = `https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/formResponse?usp=pp_url&entry.1579164508=${encodeURI(data.name)}&entry.41140801=${backup.ref}&entry.615117972=${backup.email}`;
+                return res.redirect(url);
+            }
+        } else {
+            const url = `https://docs.google.com/forms/d/e/1FAIpQLScEXcYgDu01W8GodEO2cHdeo8JppUwo8FTeJCGT1CcZo08DxQ/formResponse?usp=pp_url&entry.1579164508=${encodeURI(data.name)}&entry.41140801=${backup.ref}&entry.615117972=${backup.email}`;
+            return res.redirect(url);
         }
     }
 
